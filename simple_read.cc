@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <malloc.h>
+#include <mpi/mpi.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -16,11 +17,17 @@ long get_us() {
 }
 
 int main(int argc, char *argv[]) {
+  MPI_Init(&argc, &argv);
+  int myid;
+  int numprocs;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+  MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
   if (argc != 3) {
     printf("Usage: %s read_file_path transfer_size_in_kb\n", argv[0]);
     return 0;
   }
-  char *read_file_path = argv[1];
+  char read_file_path[105];
+  sprintf(read_file_path, "%s/%d/ior_file_easy.%08d", argv[1], myid, myid);
   int transfer_size_in_kb = atoi(argv[2]);
   int read_buffer_size = transfer_size_in_kb * 1024;
   printf("Read file %s with transfer_size %dkB\n", read_file_path,
@@ -47,5 +54,6 @@ int main(int argc, char *argv[]) {
 
   free(buffer);
   close(fd);
+  MPI_Finalize();
   return 0;
 }
