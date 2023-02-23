@@ -32,7 +32,7 @@ make -j16
 sudo make install
 ```
 
-## 编程和测试
+## 单进程编程和测试（废弃）
 
 IO 500 负载从 https://io500.org/storage/sc21/2021.11.01-15.13.47/ 扒拉下来
 
@@ -144,7 +144,7 @@ sudo pcm-memory 0.01 -csv=ior_easy_read_no_check_memory.csv -- mpirun --allow-ru
 
 内存放大比 1.834
 
-### 单进程使用自制程序读文件
+### 使用自制程序读文件
 
 ```bash
 mpicxx -o simple_read simple_read.cc -Wall -O3
