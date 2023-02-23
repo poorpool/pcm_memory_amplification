@@ -40,8 +40,77 @@ IO 500 负载从 https://io500.org/storage/sc21/2021.11.01-15.13.47/ 扒拉下�
 
 ### 使用ior easy write写文件
 
-```
+transfer size 512 kB，文件大小 20g
+
+```bash
 mkdir -p build/file/ior-easy
-ior -C -Q 1 -g -G 760427273 -k -e -o build/file/ior-easy/ior_file_easy -O stoneWallingStatusFile=build/file/ior-easy/stonewall -t 512k -b 10g -u -F -w -D 300 -O stoneWallingWearOut=300 -a POSIX
-sudo pcm-memory 0.1 -csv=ior_easy_write_memory.csv -- ior -C -Q 1 -g -G 760427273 -k -e -o build/file/ior-easy/ior_file_easy -O stoneWallingStatusFile=build/file/ior-easy/stonewall -t 512k -b 8000m -u -F -w -D 300 -O stoneWallingWearOut=1 -a POSIX
+ior -C -Q 1 -g -G 760427273 -k -e -o build/file/ior-easy/ior_file_easy -O stoneWallingStatusFile=build/file/ior-easy/stonewall -t 512k -b 20g -u -F -w -D 300 -O stoneWallingWearOut=300 -a POSIX
 ```
+
+### 使用ior easy read 读文件
+
+采样间隔 0.01s
+
+```bash
+ior -C -Q 1 -g -G 760427273 -k -e -o build/file/ior-easy/ior_file_easy -O stoneWallingStatusFile=build/file/ior-easy/stonewall -t 512k -b 20g -u -F -r -R -a POSIX
+```
+
+带 pcm 监测版：
+
+```
+sudo pcm-memory 0.01 -csv=ior_easy_read_memory.csv -- ior -C -Q 1 -g -G 760427273 -k -e -o build/file/ior-easy/ior_file_easy -O stoneWallingStatusFile=build/file/ior-easy/stonewall -t 512k -b 20g -u -F -r -R -a POSIX
+```
+
+- IO 3962.35 MB/s，用时 5.17s
+- 内存读 4558.805686 MB/s
+- 内存写 306.817627 MB/s
+
+内存放大 1.15 倍
+
+### 使用ior easy read 读文件（无读校验）
+
+删掉 -R
+
+```bash
+ior -C -Q 1 -g -G 760427273 -k -e -o build/file/ior-easy/ior_file_easy -O stoneWallingStatusFile=build/file/ior-easy/stonewall -t 512k -b 20g -u -F -r -a POSIX
+```
+
+带 pcm 监测版：
+
+```
+sudo pcm-memory 0.01 -csv=ior_easy_read_no_check_memory.csv -- ior -C -Q 1 -g -G 760427273 -k -e -o build/file/ior-easy/ior_file_easy -O stoneWallingStatusFile=build/file/ior-easy/stonewall -t 512k -b 20g -u -F -r -a POSIX
+```
+
+- IO 6082.58 MB/s，用时 3.37s
+- 内存读 6817.510542 MB/s
+- 内存写 424.239940 MB/s
+
+内存放大 1.13 倍
+
+### 使用自制程序读文件
+
+编译：
+
+```bash
+g++ -o simple_read simple_read.cc -Wall -O3
+```
+
+```bash
+./simple_read build/file/ior-easy/0/ior_file_easy.00000000 512
+```
+
+```bash
+sudo pcm-memory 0.01 -csv=my_no_check_memory.csv -- ./simple_read build/file/ior-easy/0/ior_file_easy.00000000 512
+```
+
+- IO 6084.0586 MB/s，用时 3.3662s
+- 内存读 6883.567108 MB/s
+- 内存写 326.597349 MB/s
+
+内存放大 1.13 倍
+
+## 结论
+
+自己写测试程序，和去掉 ior 的 -R，差不多，反正没了读校验都差不多。
+
+去除 VFS 开销，IOR 读校验内存放大开销 0.02 倍
